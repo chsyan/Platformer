@@ -7,6 +7,7 @@ void play() {
   playerUpdate();
   cameraUpdate();
   fallingBlockCollisions();
+  updateBullets();
 
   pushMatrix();
   translate(camPos.x, camPos.y);
