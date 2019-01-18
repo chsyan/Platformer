@@ -3,7 +3,7 @@ import fisica.*;
 
 // World
 FWorld world;
-float gridScl = 15; // Scale of grid
+float gridScl = 32; // Scale of grid
 
 // Player
 FCircle player; // Main body
@@ -17,9 +17,23 @@ final float JUMPS_REMAINING = 2; // Jumps allowed (1 for single jump, 2 for doub
 float jumpsRemaining = JUMPS_REMAINING; // Number of jumps remaining (allow for double jumping)
 float jumpCd; // Cooldown for jump (can't double jump instantaneously)
 float jumpThreshold = 15; // jumpCd must exceed jumpThreshold in order for player to be able to jump
+boolean isFacingRight = true, isRunning = false, isJumping = false, isShooting; // tests of player state
+float shootTimer; // Determine whether to shoot small, medium, or large bullets
+boolean isBigShot; // is the bullet fired a big boi or no?
+
+// Player animations
+int numPlayerSprites = 82;
+int playerSpriteNum=16;
+ArrayList<PImage> playerSprites = new ArrayList<PImage>(numPlayerSprites);
+ArrayList<PImage> playerCurrentSprites = new ArrayList<PImage>();
+PImage[] Player_Spawn, Player_Idle, Player_IdleShoot, Player_Run, Player_RunShoot, Player_Jump, Player_Fall, 
+  Player_JumpShoot, Player_FallShoot;
 
 // Falling blocks
 ArrayList<FBox> fallingBlocks = new ArrayList<FBox>();
+
+// Bullets
+ArrayList<Bullet> bullets = new ArrayList<Bullet>();
 
 // Signs
 ArrayList<Sign> signs = new ArrayList<Sign>();
@@ -46,105 +60,29 @@ void setup() {
 
   // Initialize world
   Fisica.init(this);
-  world = new FWorld(-10000, -10000, 10000, 10000);
+  world = new FWorld(-500, -500, 10000, 10000);
   world.setGravity(0, 1000);
+
+  // Load player sprites
+  loadPlayerSprites();
+  playerCurrentSprites = toArrayList(Player_Idle);
 
   // Starting game state
   state = PLAY;
 
-  // Temp make platform
-  FPoly p = new FPoly();
-  p.vertex(-100, height*.1);
-  p.vertex(width*2, height*0.1);
-  p.vertex(width*2, height*0.1+100);
-  p.vertex(-100, height*.1+100);
-  p.setStatic(true);
-  p.setRestitution(0);
-  p.setFriction(1);
-  p.setFillColor(color(255, 0, 0));
-  p.setName("Ground");
-  p.setGrabbable(false);
-  world.add(p);
-
-
-  // Temp make elevator
-  FBox b = new FBox(gridScl*3, gridScl*10);
-  b.setStatic(true);
-  b.setSensor(true);
-  b.setRestitution(0);
-  b.setFriction(0);
-  b.setPosition(200, 0);
-  b.setFillColor(color(0, 255, 0));
-  b.setName("Elevator");
-  b.setGrabbable(false);
-  world.add(b);
-
-  // Temp make spring
-  b = new FBox(gridScl*3, gridScl);
-  b.setStatic(true);
-  b.setSensor(true);
-  b.setRestitution(0);
-  b.setFriction(0);
-  b.setPosition(400, 60);
-  b.setFillColor(color(0, 0, 255));
-  b.setName("Spring");
-  b.setGrabbable(false);
-  world.add(b);
-
-  // Temp make slippery
-  b = new FBox(gridScl*20, gridScl);
-  b.setStatic(true);
-  b.setSensor(true);
-  b.setRestitution(0);
-  b.setFriction(0);
-  b.setPosition(700, 60);
-  b.setFillColor(color(255, 0, 255));
-  b.setName("Slippery");
-  b.setGrabbable(false);
-  world.add(b);
-
-  // Temp make crate/box
-  b = new FBox(gridScl*3, gridScl*3);
-  b.setStatic(false);
-  b.setSensor(false);
-  b.setRestitution(0);
-  b.setFriction(0.01);
-  b.setPosition(100, 0);
-  b.setFillColor(color(0, 255, 255));
-  b.setName("Ground");
-  b.setGrabbable(false);
-  world.add(b);
-
-  // Temp make falling
-  b = new FBox(gridScl*3, gridScl*3);
-  b.setStatic(true);
-  b.setSensor(false);
-  b.setRestitution(0);
-  b.setFriction(0);
-  b.setPosition(1000, 0);
-  b.setFillColor(color(255, 0, 255));
-  b.setName("Falling");
-  b.setGrabbable(false);
-  fallingBlocks.add(b);
-  world.add(b);
-
-  // Temp make sign
-  Sign s = new Sign("USE WASD OR ARROW KEYS TO MOVE");
-  s.setStatic(true);
-  s.setSensor(true);
-  s.setRestitution(0);
-  s.setFriction(0.01);
-  s.setPosition(50, 38);
-  s.setFillColor(color(150, 10, 255));
-  s.setName("Sign");
-  s.setGrabbable(false);
-  signs.add(s);
-  world.add(s);
+  makePlatform();
+  //makeElevator();
+  //makeSpring();
+  //makeSlippery();
+  //makeCrate();
+  //makeFalling();
+  //makeSign();
 
   // Add player
   player = new FCircle(gridScl); // Main bpdy
   player.setFriction(0);
   player.setDensity(1);
+  player.attachImage(playerSprites.get(16));
   player.setGrabbable(false);
   player.setName("Player");
   world.add(player);
