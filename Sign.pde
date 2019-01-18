@@ -8,15 +8,12 @@ class Sign extends FBox {
   }
 
   void update() {
-    println(timer);
-    if (getTouching().contains(player)) {
-      this.timer = 255;
-    }
-    if (this.timer>0) {
-      fill(255, 255, 255, this.timer);
-      textAlign(CENTER, CENTER);
-      text(message, this.getX(), this.getY()-gridScl*2);
-    }
-    this.timer-=10;
+    fill(255, 255, 255, timer);
+    textAlign(CENTER, CENTER);
+    if (getTouching().contains(player)) 
+      timer = 255;
+    if (timer>0) 
+      text(message, getX(), getY()-gridScl*2);
+    timer-=10;
   }
 }
